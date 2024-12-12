@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Laravel with Docker and ECS
+name: CD Pipeline for Virablog with MySQL and Redis
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    name: Build and Push Docker Image
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
 
     steps:
@@ -18,11 +18,9 @@ jobs:
       run: |
         aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-    - name: Build Docker Image
-      run: docker build -t virablog .
-
-    - name: Tag and Push Image
+    - name: Build and Push Laravel Image
       run: |
+        docker build -t laravel-app .
         docker tag laravel-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/laravel-app:latest
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/laravel-app:latest
 
