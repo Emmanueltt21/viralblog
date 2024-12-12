@@ -80,16 +80,16 @@ This project uses API authentication. The authentication routes and controllers 
 
 4. The Creation of Account and login
 
-## API Routes and Controller
+## Account and login
 
 The API routes are defined in the following files:
 
 - `routes/api.php`
 - `app/Http/Controllers/Api/Auth/AuthController.php`
 
-4. The CRUD Blog Post
+5. The CRUD Blog Post
 
-## API Routes and Controller
+## The CRUD Blog Post 
 
 The API routes are defined in the following files:
 
