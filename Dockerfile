@@ -1,5 +1,5 @@
 # Used for prod build.
-FROM php:8.1-fpm as php
+FROM php:8.2-fpm as php
 
 # Set environment variables
 ENV PHP_OPCACHE_ENABLE=1
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y unzip libpq-dev libcurl4-gnutls-dev ngi
 RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath curl opcache mbstring
 
 # Copy composer executable.
-COPY --from=composer:2.3.5 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy configuration files.
 COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
@@ -38,4 +38,4 @@ RUN usermod --uid 1000 www-data
 RUN groupmod --gid 1000  www-data
 
 # Run the entrypoint file.
-ENTRYPOINT [ "docker/entrypoint.sh" ]
+#ENTRYPOINT [ "docker/entrypoint.sh" ]
