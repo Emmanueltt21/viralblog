@@ -59,7 +59,7 @@ This project includes a Docker configuration for easy setup. To use Docker:
 2. Build and start the containers:
 
    ```
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
 3. The application will be available at `http://localhost:8000`.
