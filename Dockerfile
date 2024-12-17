@@ -17,9 +17,9 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath curl opcache mbstring
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy configuration files.
-COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
-COPY ./docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
-COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/php/php.ini /usr/local/etc/php/php.ini
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Set working directory to ...
 WORKDIR /app
