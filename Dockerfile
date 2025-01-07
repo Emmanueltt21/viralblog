@@ -1,41 +1,47 @@
-# Used for prod build.
-FROM php:8.2-fpm as php
+# Use the official PHP image with Apache
+FROM php:8.2-apache
 
-# Set environment variables
-ENV PHP_OPCACHE_ENABLE=1
-ENV PHP_OPCACHE_ENABLE_CLI=0
-ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
-ENV PHP_OPCACHE_REVALIDATE_FREQ=0
+# Set working directory
+WORKDIR /var/www/html
 
-# Install dependencies.
-RUN apt-get update && apt-get install -y unzip libpq-dev libcurl4-gnutls-dev nginx libonig-dev
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
 
-# Install PHP extensions.
-RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath curl opcache mbstring
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy composer executable.
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy configuration files.
-COPY docker/php/php.ini /usr/local/etc/php/php.ini
-COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
-COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+# Copy Laravel files
+COPY . .
 
-# Set working directory to ...
-WORKDIR /app
+# Install PHP dependencies
+RUN composer install --optimize-autoloader --no-dev
 
-# Copy files from current folder to container current folder (set in workdir).
-COPY --chown=www-data:www-data . .
+# Set permissions for Laravel storage and bootstrap cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create laravel caching folders.
-RUN mkdir -p ./storage/framework
-RUN mkdir -p ./storage/framework/{cache, testing, sessions, views}
-RUN mkdir -p ./storage/framework/bootstrap
-RUN mkdir -p ./storage/framework/bootstrap/cache
+# Enable Apache rewrite module
+RUN a2enmod rewrite
 
-# Adjust user permission & group.
-RUN usermod --uid 1000 www-data
-RUN groupmod --gid 1000  www-data
+# Expose port 80
+EXPOSE 80
 
-# Run the entrypoint file.
-#ENTRYPOINT [ "docker/entrypoint.sh" ]
+# Configure Apache for Laravel
+COPY .docker/apache.conf /etc/apache2/sites-available/000-default.conf
+RUN a2ensite 000-default.conf
+
+# Start Apache
+CMD ["apache2-foreground"]

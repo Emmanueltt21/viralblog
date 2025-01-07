@@ -1,81 +1,56 @@
-
 services:
-    # PHP Service container
-    viralblog_app:
-        build:
-            args:
-                user: viralblog_app_user
-                uid: 1000
-            context: .
-            dockerfile: ./Dockerfile
-        image: viralblog_app_image
-        container_name: viralblog_app
-        restart: unless-stopped
-        depends_on:
-            -   viralblog_app_mysql
-        working_dir: /var/www
-        volumes:
-            -   ./:/var/www
-        networks:
-            - viralblog_app_network
-   
-    #nginx service
-    viralblog_app_webserver:
-        platform: linux/amd64
-        image: nginx:alpine
-        container_name: viralblog_app_webserver_container
-        restart: unless-stopped
-        ports:
-            - "6162:80"
-        depends_on:
-            -   viralblog_app
-        volumes:
-            -   ./:/var/www
-            - ./docker-compose/nginx/:/etc/nginx/conf.d
-        networks:
-            - viralblog_app_network
-    #mysql service
-    viralblog_app_mysql:
-        platform: linux/amd64
-        image: mysql:5.7.22
-        container_name: viralblog_app_mysql_container
-        restart: unless-stopped
-        ports:
-            - "3337:3306"
-        environment:
-            MYSQL_ROOT_PASSWORD: password
-            MYSQL_DATABASE: viralblog_app_db
-            MYSQL_USER: viralblog_app_user
-            MYSQL_PASSWORD: password
-        volumes:
-            -   viralblog_app_mysql_data:/var/lib/mysql
-        networks:
-            - viralblog_app_network
-    viralblog_app_phpmyadmin:
-        image: phpmyadmin:5.2.1-apache
-        container_name: viralblog_app_phpmyadmin_container
-        restart: unless-stopped
-        ports:
-            -   "8383:80"
-        environment:
-            PMA_HOST: viralblog_app_mysql
-            PMA_PORT: 3306
-            PMA_USER: root
-            PMA_PASSWORD: password
-        depends_on:
-            -   viralblog_app_mysql
-        networks:
-            - viralblog_app_network
-    viralblog_app_redis:
-        image: redis:7.2-alpine
-        container_name: viralblog_app_redis_container
-        ports:
-            -   "7379:6379"
-        networks:
-            - viralblog_app_network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: viralblog_appv2
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    container_name: virablog_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: viralblog
+      MYSQL_ROOT_PASSWORD: viraladmin
+      MYSQL_PASSWORD: viraladmin
+      MYSQL_USER: viraladmin
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: viralblog_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: viraladmin
+    depends_on:
+      - db
+    networks:
+      - laravel_network
+
 volumes:
-    viralblog_app_mysql_data:
-        driver: local
+  dbdata:
+
 networks:
-    viralblog_app_network:
-        driver: bridge
+  laravel_network:
+    driver: bridge
